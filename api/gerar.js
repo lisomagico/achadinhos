@@ -9,70 +9,78 @@ export default async function handler(req, res) {
   if (!link) return res.status(400).json({ error: 'Link obrigatório' });
 
   try {
-    // Resolve shortened URL
+    // Try to fetch Shopee page for any data
+    let html = '';
     let finalUrl = link;
     try {
-      const r = await fetch(link, { method: 'HEAD', redirect: 'follow' });
-      finalUrl = r.url || link;
-    } catch {}
-
-    // Fetch Shopee page
-    let nome = '', preco_de = '', preco_por = '', img_url = '', desconto = '';
-    try {
-      const pageRes = await fetch(finalUrl, {
+      const r = await fetch(link, { 
+        method: 'GET', 
+        redirect: 'follow',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+          'Accept': 'text/html,application/xhtml+xml',
           'Accept-Language': 'pt-BR,pt;q=0.9'
         }
       });
-      const html = await pageRes.text();
+      finalUrl = r.url || link;
+      html = await r.text();
+    } catch(e) {}
 
-      // Extract product name
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      if (titleMatch) nome = titleMatch[1].replace(/\s*[\|\-].*$/, '').replace('Compre ', '').trim();
+    // Extract any useful info from HTML
+    let hints = '';
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (titleMatch) hints += 'Título da página: ' + titleMatch[1].slice(0, 200) + '\n';
+    
+    const ogTitle = html.match(/property="og:title"\s+content="([^"]+)"/i);
+    if (ogTitle) hints += 'Produto: ' + ogTitle[1].slice(0, 200) + '\n';
 
-      // Extract OG image
-      const imgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
-                       html.match(/content="([^"]+)"\s+property="og:image"/i);
-      if (imgMatch) img_url = imgMatch[1];
+    const ogDesc = html.match(/property="og:description"\s+content="([^"]+)"/i);
+    if (ogDesc) hints += 'Descrição: ' + ogDesc[1].slice(0, 300) + '\n';
 
-      // Extract price from JSON-LD or meta
-      const priceMatch = html.match(/"price"\s*:\s*"?([\d.,]+)"?/i) ||
-                         html.match(/R\$\s*([\d.,]+)/g);
-      if (priceMatch && priceMatch[0]) {
-        const prices = (html.match(/R\$\s*([\d.,]+)/g) || []).map(p => {
-          const n = parseFloat(p.replace('R$','').replace('.','').replace(',','.').trim());
-          return isNaN(n) ? 0 : n;
-        }).filter(n => n > 0).sort((a,b) => a-b);
-        if (prices.length >= 2) {
-          preco_por = `R$ ${prices[0].toFixed(2).replace('.',',')}`;
-          preco_de = `R$ ${prices[prices.length-1].toFixed(2).replace('.',',')}`;
-          const pct = Math.round((1 - prices[0]/prices[prices.length-1]) * 100);
-          if (pct > 0 && pct < 100) desconto = `${pct}%`;
-        } else if (prices.length === 1) {
-          preco_por = `R$ ${prices[0].toFixed(2).replace('.',',')}`;
-        }
-      }
-    } catch {}
+    // Extract image
+    let img_url = '';
+    const ogImg = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
+                  html.match(/content="([^"]+)"\s+property="og:image"/i);
+    if (ogImg) img_url = ogImg[1];
 
-    // Generate post with OpenRouter
+    // Extract prices
+    const prices = (html.match(/R\$\s*[\d.,]+/g) || [])
+      .map(p => parseFloat(p.replace('R$','').replace(/\./g,'').replace(',','.').trim()))
+      .filter(n => n > 0 && n < 100000)
+      .sort((a,b) => a-b);
+    
+    let preco_de = '', preco_por = '', desconto = '';
+    if (prices.length >= 2) {
+      preco_por = 'R$ ' + prices[0].toFixed(2).replace('.', ',');
+      preco_de = 'R$ ' + prices[prices.length-1].toFixed(2).replace('.', ',');
+      const pct = Math.round((1 - prices[0]/prices[prices.length-1]) * 100);
+      if (pct > 0 && pct < 90) desconto = pct + '%';
+    } else if (prices.length === 1) {
+      preco_por = 'R$ ' + prices[0].toFixed(2).replace('.', ',');
+    }
+
+    // Generate post with AI
     const prompt = `Você é especialista em grupos de achadinos da Shopee no WhatsApp.
-Produto: ${nome || 'Produto Shopee'}
-Preço DE: ${preco_de || 'não informado'}
-Preço POR: ${preco_por || 'não informado'}
-Desconto: ${desconto || 'não informado'}
+
+Informações extraídas da página:
+${hints || 'URL: ' + link}
+${preco_de ? 'Preço DE: ' + preco_de : ''}
+${preco_por ? 'Preço POR: ' + preco_por : ''}
+${desconto ? 'Desconto: ' + desconto : ''}
 Link: ${link}
 
-Crie um post MUITO chamativo pra grupo de WhatsApp com emojis, urgência e o link no final.
+Com base nessas informações, crie um post MUITO chamativo para grupo de WhatsApp de achadinos.
+Use emojis, destaque o desconto, crie urgência, coloque o link no final.
+
 Responda SOMENTE JSON puro sem markdown:
-{"post_text":"texto animado com emojis e urgência, preços em destaque, link no final"}`;
+{"nome":"nome do produto inferido","preco_de":"${preco_de || 'R$ 0,00'}","preco_por":"${preco_por || 'R$ 0,00'}","desconto":"${desconto || ''}","post_text":"texto animado com emojis urgência e link no final"}`;
 
     const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENROUTER_KEY}`,
-        'HTTP-Referer': 'https://achadinos.vercel.app',
+        'HTTP-Referer': 'https://achadinhos-chi.vercel.app',
         'X-Title': 'Achadinos Shopee'
       },
       body: JSON.stringify({
@@ -85,10 +93,20 @@ Responda SOMENTE JSON puro sem markdown:
     const aiData = await aiRes.json();
     const text = aiData.choices?.[0]?.message?.content || '';
     const clean = text.replace(/```json|```/g, '').trim();
-    let post_text = '';
-    try { post_text = JSON.parse(clean).post_text; } catch { post_text = text; }
+    
+    let dados = {};
+    try { dados = JSON.parse(clean); } catch { dados = { post_text: text, nome: '', preco_de, preco_por, desconto }; }
 
-    return res.status(200).json({ nome, preco_de, preco_por, desconto, img_url, post_text, link });
+    return res.status(200).json({ 
+      nome: dados.nome || '',
+      preco_de: dados.preco_de || preco_de,
+      preco_por: dados.preco_por || preco_por,
+      desconto: dados.desconto || desconto,
+      img_url,
+      post_text: dados.post_text || '',
+      link 
+    });
+
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
