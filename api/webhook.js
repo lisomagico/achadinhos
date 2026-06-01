@@ -59,7 +59,18 @@ ${preco_por ? 'Preço POR: ' + preco_por : ''}
 ${desconto ? 'Desconto: ' + desconto : ''}
 Link de afiliado: ${link}
 
-Crie um post MUITO chamativo com emojis, urgência e o link no final. Só o texto do post, sem explicações.`;
+Crie um post no estilo grupos de achadinos do WhatsApp. Formato EXATO:
+
+🛍️ [nome do produto]
+
+[se tiver preço antigo: "de R$ XX,XX" em linha separada]
+por R$ XX,XX ✨
+
+🔗 Compre aqui: [link]
+
+#Shopee #Achadinho #Promoção
+
+Só o texto, sem explicações, sem "aqui está" ou qualquer introdução.`;
 
   const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
