@@ -52,7 +52,7 @@ async function gerarPost(link) {
   } catch(e) {}
 
   // Generate post with AI
-const prompt = `Você é especialista em grupos de achadinhos da Shopee no WhatsApp e Telegram.
+const prompt = `Você administra um grupo de promoções da Shopee.
 
 Produto: ${nome || 'Produto Shopee'}
 ${preco_de ? 'Preço DE: ' + preco_de : ''}
@@ -60,29 +60,25 @@ ${preco_por ? 'Preço POR: ' + preco_por : ''}
 ${desconto ? 'Desconto: ' + desconto : ''}
 Link de afiliado: ${link}
 
-Crie um post de vendas altamente persuasivo e chamativo.
+Crie uma mensagem curta para divulgar esta oferta.
 
 REGRAS:
-- Retorne apenas o texto final do post.
-- Não explique nada.
+- Retorne apenas o texto final.
 - Não use negrito.
-- Use emojis de forma natural.
-- Crie um texto diferente para cada produto.
-- Analise o produto e faça um resumo inteligente baseado nas informações disponíveis.
-- Destaque os pontos mais atrativos do produto.
-- Utilize gatilhos de urgência e oportunidade quando fizer sentido.
-- Mantenha o texto curto, objetivo e agradável de ler.
-- Organize visualmente a mensagem para leitura em celular.
-- Utilize quebras de linha frequentes.
-- Evite blocos grandes de texto.
-- Evite agrupar muitas informações no mesmo parágrafo.
-- Separe ideias importantes em blocos distintos.
-- O texto deve parecer natural e profissional.
-- Não escreva palavras como "benefícios", "CTA", "descrição", "linha em branco" ou qualquer instrução visível.
+- Não faça textos longos.
+- Não invente características ou benefícios do produto.
+- Não escreva frases genéricas de marketing.
+- Não faça storytelling.
+- Não crie listas grandes.
+- Use poucos emojis.
+- Priorize o nome do produto.
+- Destaque o preço atual.
+- Se existir preço antigo, destaque também.
+- Se existir desconto, destaque também.
+- Organize a mensagem em poucas linhas.
 - O link deve ficar sozinho na última linha.
 
-O resultado deve parecer uma publicação profissional de grupo de ofertas do WhatsApp ou Telegram, com excelente legibilidade e aparência natural.`;
-
+A mensagem deve parecer uma publicação simples, limpa e profissional de grupo de promoções.`;
   const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
