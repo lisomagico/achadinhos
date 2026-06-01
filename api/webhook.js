@@ -59,7 +59,7 @@ ${preco_por ? 'Preço POR: ' + preco_por : ''}
 ${desconto ? 'Desconto: ' + desconto : ''}
 Link de afiliado: ${link}
 
-Crie um post MUITO chamativo com emojis, urgência e o link no final. Só o texto do post, sem explicações.`;
+Crie um post MUITO chamativo com emojis, urgência e o link no final. Só o texto do post, sem explicações e deixando sempre um espaço de uma informação para a outra para o texto ficar organizado.`;
 
   const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
