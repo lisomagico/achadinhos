@@ -52,14 +52,36 @@ async function gerarPost(link) {
   } catch(e) {}
 
   // Generate post with AI
-  const prompt = `Você é especialista em grupos de achadinos da Shopee no WhatsApp.
+const prompt = `Você é especialista em grupos de achadinhos da Shopee no WhatsApp e Telegram.
+
 Produto: ${nome || 'Produto Shopee'}
 ${preco_de ? 'Preço DE: ' + preco_de : ''}
 ${preco_por ? 'Preço POR: ' + preco_por : ''}
 ${desconto ? 'Desconto: ' + desconto : ''}
 Link de afiliado: ${link}
 
-Crie um post chamativo com emojis e urgência. Retorne apenas o texto do post seguindo exatamente esta estrutura: Chamada → linha em branco → benefício → linha em branco → benefício → linha em branco → benefício → linha em branco → CTA → linha em branco → link sozinho. Nunca junte várias informações no mesmo bloco de texto. Não use negrito.`;
+Crie um post de vendas altamente persuasivo e chamativo.
+
+REGRAS:
+- Retorne apenas o texto final do post.
+- Não explique nada.
+- Não use negrito.
+- Use emojis de forma natural.
+- Crie um texto diferente para cada produto.
+- Analise o produto e faça um resumo inteligente baseado nas informações disponíveis.
+- Destaque os pontos mais atrativos do produto.
+- Utilize gatilhos de urgência e oportunidade quando fizer sentido.
+- Mantenha o texto curto, objetivo e agradável de ler.
+- Organize visualmente a mensagem para leitura em celular.
+- Utilize quebras de linha frequentes.
+- Evite blocos grandes de texto.
+- Evite agrupar muitas informações no mesmo parágrafo.
+- Separe ideias importantes em blocos distintos.
+- O texto deve parecer natural e profissional.
+- Não escreva palavras como "benefícios", "CTA", "descrição", "linha em branco" ou qualquer instrução visível.
+- O link deve ficar sozinho na última linha.
+
+O resultado deve parecer uma publicação profissional de grupo de ofertas do WhatsApp ou Telegram, com excelente legibilidade e aparência natural.`;
 
   const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
