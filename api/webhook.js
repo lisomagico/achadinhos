@@ -72,8 +72,8 @@ REGRAS:
 - Destaque os pontos mais atrativos do produto.
 - Utilize gatilhos de urgência e oportunidade quando fizer sentido.
 - Mantenha o texto curto, objetivo e agradável de ler.
-- Organize visualmente a mensagem para leitura em celular.
-- Utilize quebras de linha frequentes.
+- Organize visualmente a mensagem para leitura em celular sem que as informações fiquem agrupadas.
+- Utilize quebras de linha estrategica.
 - Evite blocos grandes de texto.
 - Evite agrupar muitas informações no mesmo parágrafo.
 - Separe ideias importantes em blocos distintos.
